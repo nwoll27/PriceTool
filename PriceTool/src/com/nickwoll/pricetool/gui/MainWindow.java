@@ -21,22 +21,29 @@ public class MainWindow extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1L;
 	private static final String applicationName = "Price Tool Application Demo";
 	private ItemList itemList;
+	private List<QuoteRecord> quoteList;
+	private JTable headerTable;
+	private JTable quoteTable;
+	private HeaderTableModel headerModel;
+	private QuoteTableModel quoteModel;
+	final FilterDialog dialog;
+	
 
 	public MainWindow(String title) {
 		super(title);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		itemList = new ItemList();
+		quoteList = new ArrayList<QuoteRecord>();
 		// Set Up Content Pane
 		addComponentsToPane();
 
 		// Display Window
 		pack();
-		// setLocationRelativeTo(null);
 		setVisible(true);
 		setExtendedState(JFrame.MAXIMIZED_BOTH);
 
 		// Setup and Show Filter Dialog
-		final FilterDialog dialog = new FilterDialog(this, title, itemList);
+		dialog = new FilterDialog(this, title, itemList, this);
 		dialog.setLocationRelativeTo(this);
 		dialog.setVisible(true);
 
@@ -66,12 +73,12 @@ public class MainWindow extends JFrame implements ActionListener {
 		vPanel.setAlignmentX(LEFT_ALIGNMENT);
 
 		// Define Header Table
-		JTable headerTable = new JTable(new HeaderTableModel());
+		headerTable = new JTable(headerModel = new HeaderTableModel());
 		headerTable.setSelectionBackground(Color.white);
 		vPanel.add(headerTable);
 		
 		//Define Quote Table
-		JTable quoteTable = new JTable(new QuoteTableModel());
+		quoteTable = new JTable(quoteModel = new QuoteTableModel(quoteList));
 		JScrollPane scrollPane = new JScrollPane(quoteTable);
 		quoteTable.setFillsViewportHeight(true);
 		vPanel.add(scrollPane);
@@ -85,8 +92,23 @@ public class MainWindow extends JFrame implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
+		if("addtoquote".equals(e.getActionCommand())){
+			int startListIndex, endListIndex;
+			
+			startListIndex = quoteList.size() - 1;
+			int[] itemListModelIndices = dialog.getSelectedPriceListIndices();
+			for(int i=0; i < itemListModelIndices.length; i++){
+				addRecordToQuoteTable(itemList.getList().get(itemListModelIndices[i]));
+				System.out.println();
+			}
+			endListIndex = quoteList.size() - 1; 
+			quoteModel.fireTableRowsInserted(startListIndex, endListIndex);			
+		}
 
+	}
+	
+	public void addRecordToQuoteTable(ItemRecord itemRecord){
+		quoteList.add(new QuoteRecord(quoteList.size()+1, itemRecord));
 	}
 
 	class HeaderTableModel extends AbstractTableModel {
@@ -145,10 +167,10 @@ public class MainWindow extends JFrame implements ActionListener {
 		private String[] columnNames = { "Line#", "Detail", "Qty",
 				"Item Number", "Item Description", "Shipment(Buss. Days)",
 				"Discount", "Net Price Each", "Extended Net Price", };
-		private List<List<String>> data;
+		private List<QuoteRecord> data;
 
-		public QuoteTableModel() {
-			data = new ArrayList<List<String>>();
+		public QuoteTableModel(List<QuoteRecord> quoteList) {
+			data = quoteList;
 		}
 
 		@Override
@@ -166,7 +188,7 @@ public class MainWindow extends JFrame implements ActionListener {
 
 		@Override
 		public void setValueAt(Object aValue, int rowIndex, int colIndex) {
-			data.get(rowIndex).set(colIndex, (String)aValue);
+			data.get(rowIndex).getList().set(colIndex, (String)aValue);
 			fireTableRowsUpdated(rowIndex, rowIndex);
 		}
 
@@ -182,7 +204,7 @@ public class MainWindow extends JFrame implements ActionListener {
 
 		@Override
 		public Object getValueAt(int rowIndex, int columnIndex) {
-			return data.get(rowIndex).get(columnIndex);
+			return data.get(rowIndex).getList().get(columnIndex);
 		}
 
 	}

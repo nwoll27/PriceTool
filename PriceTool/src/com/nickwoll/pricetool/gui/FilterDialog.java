@@ -2,6 +2,7 @@ package com.nickwoll.pricetool.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
@@ -37,14 +38,17 @@ public class FilterDialog extends JDialog {
 	private JPanel contentPane;
 	private JPanel vPanel;
 	private JPanel hControllerWidget;
+	private JTable priceListTable;
 	private TableRowSorter<FilterTableModel> sorter;
+	private ActionListener mainWindowListener;
 	
-	public FilterDialog(JFrame frame, String title, ItemList itemList){
+	public FilterDialog(JFrame frame, String title, ItemList itemList, ActionListener mainWindowListener){
 		super(frame, title, false);
+		this.mainWindowListener = mainWindowListener;
 		this.itemList = itemList;
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		addComponentsToPane();
-		setSize(new Dimension(800, 600));
+		setSize(new Dimension(800, 500));
 	}
 
 	private void addComponentsToPane() {
@@ -88,6 +92,8 @@ public class FilterDialog extends JDialog {
         itemGroupCombo.addItemListener(comboListener);
         
         JButton addToQuoteButton = new JButton("Add to Quote");
+        addToQuoteButton.setActionCommand("addtoquote");
+        addToQuoteButton.addActionListener(mainWindowListener);
         
         //Add components to the horizontal panel
         hControllerWidget.add(priceListLabel);
@@ -102,7 +108,7 @@ public class FilterDialog extends JDialog {
 		//Build Item list table
 		FilterTableModel filterModel = new FilterTableModel(itemList.getList());
 		sorter = new TableRowSorter<FilterTableModel>(filterModel);
-		JTable priceListTable = new JTable(filterModel);
+		priceListTable = new JTable(filterModel);
 		priceListTable.setRowSorter(sorter);
 		JScrollPane scrollPane = new JScrollPane(priceListTable);
 		priceListTable.setFillsViewportHeight(true);
@@ -163,5 +169,19 @@ public class FilterDialog extends JDialog {
 			return data.get(rowIndex).getList().get(columnIndex);
 		}
 		
+		public ItemRecord getRowRecord(int rowIndex){
+			return data.get(rowIndex);
+		}
+		
+	}
+
+	public int[] getSelectedPriceListIndices() {
+		int[] modelIndices = new int[priceListTable.getSelectedRows().length];
+		
+		for(int i = 0; i < priceListTable.getSelectedRows().length; i++){
+			modelIndices[i]=priceListTable.convertRowIndexToModel(priceListTable.getSelectedRows()[i]);
+		}	
+		
+		return modelIndices;		
 	}
 }

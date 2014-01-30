@@ -1,9 +1,14 @@
 package com.nickwoll.pricetool.util;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ItemRecord {
-	private List<String> fields;
+	protected List<String> fields;
+	
+	public ItemRecord(){
+		fields = new ArrayList<String>();
+	}
 		
 	public ItemRecord(List<String> recordData){
 		fields = recordData;		
@@ -52,6 +57,4 @@ public class ItemRecord {
 	public void setItemGroup(String itemGroup){
 		fields.set(4, itemGroup);
 	}
-	
-
 }
